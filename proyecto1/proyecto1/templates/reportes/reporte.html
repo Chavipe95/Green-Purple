@@ -1,0 +1,217 @@
+{% extends 'layouts/base.html'%}
+{% load static %}
+
+{% block title %} Reporte {% endblock title %}
+        
+{% block style %}
+    <style>
+        .containter {
+            margin: 100px;
+        }
+    </style>
+{% endblock style %}
+
+{% block content %}
+    <div class="containter">
+        <div class="row">
+            <div class="col-12 mt-5">
+                <table class="table" id="tabla">
+                    <tr>
+                        <th>Problema</th>
+                        <th>Dirección</th>
+                        <th>Ciudad</th>
+                        <th>Archivo</th>
+                        <th>Acciones</th>
+                    </tr>
+                        {% if reportes %}
+                             {% for reporte in reportes %}
+                                <tr id="{{reporte.id}}_fila">
+                                    <td id="{{reporte.id}}_problema"> {{ reporte.problema}}</td>
+                                    <td id="{{reporte.id}}_direccion"> {{ reporte.direccion}} </td>
+                                    <td id="{{reporte.id}}_ciudad"> {{ reporte.ciudad}} </td>
+                                    {% if reporte.archivo %}
+                                    <td id="{{reporte.id}}_archivo"> <a href="{{ reporte.archivo.url }}"> {{reporte.archivos.name}} </a></td>
+                                    {% else %}
+                                    <td id="{{reporte.id}}_archivo">Sin archivo</td>
+                                    {% endif %}
+                                    <td>
+                                        <button class="btn btn-primary" onclick="editar({{ reporte.id }})"> Editar</button>
+                                        <button class="btn btn-danger" onclick="eliminar({{ reporte.id }})"> Eliminar</button>                                    
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <th>NO HAY PROBLEMAS REGISTRADOS</th>
+                        </tr>
+                        {% endif %}
+                    
+                </table>
+            </div>
+            <hr>
+            <div class="col-12" mt-5>
+                <form action="{% url 'reporte' %}" method="POST" id="reporte_form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{formReportes.problema.label}}
+                        {{formReportes.problema}} 
+                    </div>
+                    <div class="mb-3">
+                        {{formReportes.direccion.label}}
+                        {{formReportes.direccion}} 
+                    </div>
+                    <div class="mb-3">
+                        {{formReportes.ciudad.label}}
+                        {{formReportes.ciudad}} 
+                    </div>
+                    <div class="mb-3">
+                        {{formReportes.archivo.label}}
+                        {{formReportes.archivo}} 
+                    </div>
+                    <div class="mb-3">
+                        {{formReportes.activo.label}}
+                        {{formReportes.activo}} 
+                    </div>
+                    <input  type="hidden" id="id_formulario">
+                    <button  id="boton_guardar" type="submit" onclick="guardarDato()" class="btn btn-primary">Guardar</button>
+                    <button  id="boton_actualizar" type="button" " class="btn btn-primary" style="display: none;">Guardar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <hr>
+    
+    {% endblock content %}
+{% block scripts %}
+    <script type="text/javascript">
+        function eliminar(id){
+            if(confirm('¿Está seguro de que quiere eliminar el reporte? id: '+id)){
+                $.ajax({
+            method: "POST",
+            url: "{% url 'ajaxEliminarReporte' %}",
+            headers: {
+                'X-CSRFToken':'{{ csrf_token }}'
+            },
+            data: {
+                  "id":id,
+            },
+            success: function(response){
+                $("#"+response.id+"_fila").remove()
+            }
+          });
+            }
+            
+    
+        }
+        function borarFormulario(){
+            $("#id_problema").val("")
+            $("#id_direccion").val("")
+            $("#id_ciudad").val("")
+        }
+        function validarFormulario(){
+            let error = false
+            if($("#id_problema").val()==""){
+                $("#id_problema").addClass("is-invalid")
+                error = true
+            }
+            if($("#id_direccion").val()==""){
+                $("#id_direccion").addClass("is-invalid")
+                error = true
+            }
+            if($("#id_ciudad").val()==""){
+                $("#id_ciudad").addClass("is-invalid")
+                error = true
+            }
+            return error
+    
+        }
+        let id = 1;
+    
+        function guardarDato(){
+            
+            let formHasError = validarFormulario()
+            if(!formHasError){
+                
+                $("#producto_form").submit()
+            }
+        }
+        function editar(id){
+            clearError()
+            $("#boton_actualizar").show()
+            $("#boton_guardar").hide()
+            let problema = $("#"+id+"_problema").text()
+            let direccion = $("#"+id+"_direccion").text()
+            let ciudad = $("#"+id+"_ciudad").text()
+            $("#id_formulario").val(id)
+            $("#id_problema").val(problema)
+            $("#id_direccion").val(direccion)
+            $("#id_ciudad").val(ciudad)
+    
+        }
+        function clearError(){
+            $("#id_problema").removeClass("is-invalid")
+            $("#id_direccion").removeClass("is-invalid")
+            $("#id_ciudad").removeClass("is-invalid")
+    
+        }
+        $("#id_problema").on('input',function(){
+            $(this).removeClass("is-invalid")
+        });
+        $("#id_direccion").on('input',function(){
+            $(this).removeClass("is-invalid")
+        });
+        $("#id_ciudad").on('input',function(){
+            $(this).removeClass("is-invalid")
+        });
+        $("#boton_actualizar").click(function(){
+            
+            let id = $("#id_formulario").val()
+            let nombre = $("#id_problema").val();
+            let descripcion = $("#id_direccion").val();
+            let precio = $("#id_ciudad").val();
+            let formHasError = validarFormulario()
+            if(!formHasError){
+         $.ajax({
+            method: "POST",
+            url: "{% url 'ajaxEditarReporte' %}",
+            headers: {
+                'X-CSRFToken':'{{ csrf_token }}'
+            },
+            data: {
+                  "id":id,
+                  "problema":problema,
+                  "direccion":direccion,
+                  "ciudad":ciudad
+                },
+            success: function(response){
+                $("#"+response.id+"_problema").text(response.problema)
+                $("#"+response.id+"_direccion").text(response.direccion)
+                $("#"+response.id+"_ciudad").text(response.ciudad)
+                $("#boton_actualizar").hide()
+                $("#boton_guardar").show()
+                borarFormulario()
+             
+           
+            }
+          });
+                
+            }
+        });
+    
+        
+        $("#agregar").click(function(){
+            let fila = "<tr id='editable'><td>Daniel</td><td>Programador</td><td>78</td><tr>"
+            $('#tabla').append(fila)
+        });
+        $("#editar").click(function(){
+            let fila = "<td>Alejandro</td><td>Diseñador</td><td>21</td>"
+            $('#editable').empty()
+            $('#editable').append(fila)
+            $('#editable').removeAttr("id")
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+    
+    {% endblock scripts %}
+
+

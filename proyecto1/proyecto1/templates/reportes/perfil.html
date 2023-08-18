@@ -1,0 +1,22 @@
+{% load static %}
+
+    {% block title %} Bienvenido {% endblock title %}
+
+
+    {%block content %}     
+    <div class="container-fluid h-custom">
+        <div class="row d-flex justify-content-center aling-items-center h-100">
+            
+            <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
+                <h2><strong> Nombre: </strong>{{ persona.nombre }}</h2>
+                <h2><strong> Apellido: </strong>{{ persona.apellido }}</h2>
+                <h2><strong> Calle: </strong>{{ persona.calle }}</h2>
+                <h2><strong> Colonia: </strong>{{ persona.colonia }}</h2>
+                <h2><strong> Codigo_postal: </strong>{{ persona.codigo_postal }}</h2>
+                <h2><strong> Estado: </strong>{{ persona.estado }}</h2>
+            </div>
+        </div>
+    </div>
+    
+        {% endblock content %}
+   
